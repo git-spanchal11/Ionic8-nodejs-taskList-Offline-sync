@@ -1,0 +1,10 @@
+<ion-item>
+  <ion-label>
+    <h2>{{ task.title }}</h2>
+    <p>{{ task.createdAt | date:'short' }}</p>
+    <p *ngIf="isSyncing" color="medium"><ion-icon name="sync-outline"></ion-icon> Sync Pending</p>
+  </ion-label>
+  <ion-badge slot="end" [color]="getStatusColor(task.status)" (click)="onStatusClick()">
+    {{ task.status }}
+  </ion-badge>
+</ion-item>

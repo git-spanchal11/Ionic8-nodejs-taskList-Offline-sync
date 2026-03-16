@@ -1,0 +1,18 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>Login</ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="login-container">
+    <h2 class="ion-text-center">Task Management</h2>
+    <p class="ion-text-center ion-margin-bottom">Sign in to sync your field tasks</p>
+    
+    <ion-text color="danger" *ngIf="errorMsg" class="ion-text-center">
+      <p>{{ errorMsg }}</p>
+    </ion-text>
+
+    <app-login-form (loginSubmit)="onLogin($event)"></app-login-form>
+  </div>
+</ion-content>

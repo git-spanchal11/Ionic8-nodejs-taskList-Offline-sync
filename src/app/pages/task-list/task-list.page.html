@@ -1,0 +1,33 @@
+<ion-header>
+  <ion-toolbar color="primary">
+    <ion-title>My Tasks</ion-title>
+    <ion-buttons slot="end">
+      <ion-button *ngIf="!(networkService.isOnline$ | async)" color="warning">
+        <ion-icon name="wifi-outline"></ion-icon> Offline
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content>
+  <ion-list *ngIf="tasks.length > 0; else noTasks">
+    <app-task-item 
+      *ngFor="let task of tasks" 
+      [task]="task"
+      [isSyncing]="syncQueueIds.has(task.taskId)"
+      (statusClick)="onTaskStatusClick($event)">
+    </app-task-item>
+  </ion-list>
+
+  <ng-template #noTasks>
+    <div class="ion-padding ion-text-center">
+      <p>No tasks found.</p>
+    </div>
+  </ng-template>
+
+  <ion-fab slot="fixed" vertical="bottom" horizontal="end">
+    <ion-fab-button (click)="promptAddTask()">
+      <ion-icon name="add-outline"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+</ion-content>
