@@ -8,7 +8,15 @@ admin.initializeApp();
 const db = admin.firestore();
 
 const app = express();
-app.use(cors({ origin: true }));
+
+// Comprehensive CORS configuration
+app.use(cors({ 
+  origin: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  credentials: true
+}));
+
 app.use(express.json());
 
 // Mock Auth Middleware
