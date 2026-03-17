@@ -32,8 +32,8 @@ export class SyncService {
            console.log(`Syncing item: DELETE Task ${item.taskId}`);
         }
         
-        // Simulate network delay for sync
-        await new Promise(resolve => setTimeout(resolve, 500));
+        // Execute against backend sequentially to prevent conflicting race conditions
+        await this.taskService.executeSyncAction(item);
       }
       await this.taskService.clearSyncQueue();
       console.log('Sync complete.');
