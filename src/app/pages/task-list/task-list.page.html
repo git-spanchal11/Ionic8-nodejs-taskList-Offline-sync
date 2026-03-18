@@ -10,6 +10,14 @@
 </ion-header>
 
 <ion-content>
+  <!-- Sync Progress UI -->
+  <div *ngIf="syncService.syncProgress$ | async as progress" class="ion-text-center">
+    <div *ngIf="progress.active" class="ion-padding-horizontal ion-padding-top">
+      <ion-progress-bar [value]="progress.percentage / 100" color="success"></ion-progress-bar>
+      <ion-note color="medium" style="font-size: 0.8em;">{{ progress.message }}</ion-note>
+    </div>
+  </div>
+
   <ion-list *ngIf="tasks.length > 0; else noTasks">
     <app-task-item 
       *ngFor="let task of tasks" 

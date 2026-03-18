@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://us-central1-tasklist-project.cloudfunctions.net/api' // Production GCP URL
+  apiUrl: 'http://localhost:3000/api' // Production GCP URL
 };

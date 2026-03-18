@@ -1,18 +1,15 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
 import { Observable, catchError, from, of, tap, firstValueFrom } from 'rxjs';
 import { NetworkService } from './network.service';
 import { StorageService } from './storage.service';
+import { HttpService } from './http.service';
 import { environment } from '../../../environments/environment';
-
 export interface Task {
   taskId: string;
   title: string;
   status: 'Pending' | 'In Progress' | 'Done';
   createdAt?: string;
-  isDeleted?: boolean; // Used for local soft deletion before sync
 }
-
 export interface SyncAction {
   action: 'ADD' | 'UPDATE' | 'DELETE';
   taskId: string;
@@ -28,10 +25,10 @@ export class TaskService {
   private readonly SYNC_QUEUE_KEY = 'sync_queue';
 
   constructor(
-    private http: HttpClient,
+    private http: HttpService,
     private networkService: NetworkService,
     private storageService: StorageService
-  ) {}
+  ) { }
 
   getTasks(): Observable<Task[]> {
     if (this.networkService.currentStatus) {
@@ -84,11 +81,11 @@ export class TaskService {
 
     if (this.networkService.currentStatus) {
       try {
-        const response = await firstValueFrom<{task_id: string}>(this.http.post<any>(`${environment.apiUrl}/tasks`, { taskId: tempTaskId, title, status: 'Pending' }));
+        const response = await firstValueFrom<{ task_id: string }>(this.http.post<any>(`${environment.apiUrl}/tasks`, { taskId: tempTaskId, title, status: 'Pending' }));
         console.log(`Live Add: Task ${response.task_id} created`);
       } catch (err) {
-         console.error('Error on live add, queueing offline fallback:', err);
-         await this.queueSyncAction({ action: 'ADD', taskId: tempTaskId, payload: newTask, timestamp: Date.now() });
+        console.error('Error on live add, queueing offline fallback:', err);
+        await this.queueSyncAction({ action: 'ADD', taskId: tempTaskId, payload: newTask, timestamp: Date.now() });
       }
     } else {
       await this.queueSyncAction({ action: 'ADD', taskId: tempTaskId, payload: newTask, timestamp: Date.now() });
@@ -133,20 +130,47 @@ export class TaskService {
   async executeSyncAction(action: SyncAction): Promise<void> {
     try {
       if (action.action === 'ADD' && action.payload) {
-        await firstValueFrom(this.http.post<any>(`${environment.apiUrl}/tasks`, { 
-          taskId: action.taskId, 
-          title: action.payload.title, 
-          status: 'Pending' 
+        await firstValueFrom(this.http.post<any>(`${environment.apiUrl}/tasks`, {
+          taskId: action.taskId,
+          title: action.payload.title,
+          status: action.payload.status || 'Pending'
         }));
       } else if (action.action === 'UPDATE' && action.payload) {
-        await firstValueFrom(this.http.put(`${environment.apiUrl}/tasks/${action.taskId}/status`, { 
-          status: action.payload.status 
+        await firstValueFrom(this.http.put(`${environment.apiUrl}/tasks/${action.taskId}/status`, {
+          status: action.payload.status
         }));
       } else if (action.action === 'DELETE') {
         await firstValueFrom(this.http.delete(`${environment.apiUrl}/tasks/${action.taskId}`));
       }
     } catch (err) {
       console.error(`Failed to execute sync action ${action.action} for ${action.taskId}`, err);
+    }
+  }
+
+  /**
+   * Batch Sync Method
+   * Ideally, this calls a SINGLE endpoint like POST /tasks/sync
+   * For the current setup, we will implement the logic that SHOULD be a single call,
+   * but provide a fallback if the backend hasn't implemented it yet.
+   */
+  async batchSync(tasks: SyncAction[], onProgress: (percentage: number) => void): Promise<void> {
+    // If we assume a batch endpoint exists (Backend change required):
+    try {
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/tasks/sync`, { tasks }));
+      onProgress(100);
+      return;
+    } catch (err) {
+      console.warn('Batch endpoint not found, falling back to sequential...');
+    }
+
+    // Fallback: Optimized sequential calls to stay compatible with current backend 
+    let count = 0;
+    for (const action of tasks) {
+      await this.executeSyncAction(action);
+      count++;
+      onProgress(Math.round((count / tasks.length) * 100));
+      // Artificial delay for UI visibility
+      await new Promise(resolve => setTimeout(resolve, 200));
     }
   }
 }

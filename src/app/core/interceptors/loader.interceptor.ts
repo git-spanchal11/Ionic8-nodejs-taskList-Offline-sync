@@ -8,11 +8,14 @@ export class LoaderInterceptor implements HttpInterceptor {
   private loading: HTMLIonLoadingElement | null = null;
   private requestCount = 0;
 
-  constructor(private loadingCtrl: LoadingController) {}
+  constructor(private loadingCtrl: LoadingController) { }
 
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     this.requestCount++;
-    this.showLoader();
+
+    if (request.url !== '') {
+      this.showLoader();
+    }
 
     return next.handle(request).pipe(
       finalize(() => {
@@ -25,6 +28,8 @@ export class LoaderInterceptor implements HttpInterceptor {
   }
 
   private async showLoader() {
+    // await this.loading?.dismiss();
+    // this.loading = null;
     if (!this.loading && this.requestCount > 0) {
       this.loading = await this.loadingCtrl.create({
         message: 'Loading...',
@@ -35,9 +40,15 @@ export class LoaderInterceptor implements HttpInterceptor {
   }
 
   private async hideLoader() {
-    if (this.loading) {
-      await this.loading.dismiss();
-      this.loading = null;
-    }
+    setTimeout(async () => {
+      if (this.loading) {
+        await this.loadingCtrl.getTop().then(async (loader) => {
+          if (loader) {
+            await loader.dismiss();
+            this.loading = null;
+          }
+        });
+      }
+    }, 1000);
   }
 }

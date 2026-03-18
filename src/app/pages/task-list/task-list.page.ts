@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonicModule, ActionSheetController, AlertController } from '@ionic/angular';
 import { TaskService, Task } from '../../core/services/task.service';
 import { NetworkService } from '../../core/services/network.service';
+import { SyncService } from '../../core/services/sync.service';
 import { TaskItemComponent } from '../../shared/components/task-item/task-item.component';
 import { addIcons } from 'ionicons';
 import { syncOutline, wifiOutline, addOutline, trashOutline, timeOutline, constructOutline, checkmarkCircleOutline, closeOutline } from 'ionicons/icons';
@@ -16,6 +17,7 @@ import { syncOutline, wifiOutline, addOutline, trashOutline, timeOutline, constr
 export class TaskListPage implements OnInit {
   private taskService = inject(TaskService);
   public networkService = inject(NetworkService);
+  public syncService = inject(SyncService);
   private actionSheetCtrl = inject(ActionSheetController);
   private alertCtrl = inject(AlertController);
 
