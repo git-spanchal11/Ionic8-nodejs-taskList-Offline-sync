@@ -1,65 +1,97 @@
 # Task Status Update App
 
-This is a production-minded Ionic Angular application built for field employees. It strictly adheres to Ionic components, robust Angular Architecture, and provides full offline synchronization with a GCP backend.
+A Ionic Angular application. This project focuses on high-performance architecture, robust offline-first synchronization, and a scalable Node.js + Express backend.
 
-## Setup Instructions
 
-### Frontend (Ionic + Angular)
-1. **Install Dependencies**
+## 🚀 Key Features
+
+- **Offline-First**: Fully functional when offline (Add, Update, Delete tasks).
+- **Intelligent Sync**: Merges redundant offline actions (Squashing) to minimize API calls.
+- **Native Experience**: Built strictly with Ionic components for a premium mobile feel.
+- **GCP Powered**: Serverless architecture using Firebase Functions and Cloud Firestore.
+- **Real-time Feedback**: Visual sync progress with percentage and status monitoring.
+
+
+## 🛠 Technology Stack
+
+- **Frontend**: [Ionic Framework](https://ionicframework.com/), [Angular 17+](https://angular.io/)
+- **Cross-Platform**: [Capacitor](https://capacitorjs.com/) (Network & Storage)
+- **State & Logic**: [RxJS](https://rxjs.dev/) (Reactive Programming), [Lodash](https://lodash.com/) (Data manipulation)
+- **Backend**: [Firebase Functions](https://firebase.google.com/docs/functions) (Node.js/Express)
+- **Database**: [Cloud Firestore](https://firebase.google.com/docs/firestore) (NoSQL)
+- **Styling**: Vanilla CSS with Ionic Design System tokens.
+
+---
+
+## 🏗 Architecture Overview
+
+The application follows a **Clean Service-Oriented Architecture**:
+
+### 1. Core Services Layer
+- `HttpService`: A wrapper for `HttpClient` that enforces pre-flight network checks.
+- `TaskService`: Manages task state, local caching, and synchronization logic.
+- `SyncService`: Orchestrates the background synchronization process and queue optimization.
+- `NetworkService`: Reactive monitor for device connectivity status.
+- `StorageService`: Persistent local storage using Ionic Storage (IndexedDB/SQLite).
+
+### 2. Interceptor Layer
+- `AuthInterceptor`: Automatically attaches Bearer JWT tokens to API requests.
+- `NetworkInterceptor`: Global guard that blocks requests if the device is offline.
+- `LoaderInterceptor`: Managed global loading spinner based on active request counts.
+- `CamelCaseInterceptor`: Seamlessly maps backend `snake_case` to frontend `camelCase`.
+
+### 3. Backend (GCP)
+- **Express API**: Hosted on Cloud Functions for a scalable, serverless REST interface.
+- **Firestore DAL**: Uses the `firebase-admin` SDK for high-performance atomic writes.
+
+---
+
+## 🚦 Setup & Installation
+
+### Prerequisite
+- Node.js (v18+)
+- Ionic CLI (`npm install -g @ionic/cli`)
+- Firebase CLI (`npm install -g firebase-tools`)
+
+### Quick Start (Dev Mode)
+1. **Clone and Install**
    ```bash
    npm install
+   cd functions && npm install && cd ..
    ```
-2. **Run Application**
+2. **Launch Both Frontend & Backend**
    ```bash
-   npm start
+   npm run dev
    ```
+   *This command starts the Ionic dev server (port 8100) and the Firebase Emulator (port 4000) simultaneously.*
 
-### Backend (GCP Firebase Functions)
-1. **Install CLI**
-   ```bash
-   npm install -g firebase-tools
-   ```
-2. **Initialize & Emulate**
-   ```bash
-   cd functions
-   npm install
-   npm run serve
-   ```
+---
 
-### Login credentials (Mock Auth)
-- **Email:** `sagar@gmail.com`
-- **Password:** `password@123`
+## 🔄 Offline Synchronization Approach
 
-## Architecture Overview
+The app implements a **Persistent Queue-Based Synchronization** strategy:
 
-The app follows a strict micro-level component and service-oriented architecture linking to a GCP Firebase backend:
+1.  **Local Persistence**: Every user action (Add/Status Update/Delete) is immediately saved to the local cache and a `SyncQueue` in storage.
+2.  **Queue Squashing (Optimization)**: Before syncing, the app analyzes the queue. If a task was updated 5 times offline, or added and then deleted, those actions are merged into a single final state to save bandwidth and reduce server load.
+3.  **Automatic Reconnect**: The `NetworkService` detects when connectivity returns and triggers the `SyncService.flushQueue()`.
+4.  **Batch Sync Readiness**: The frontend is architected to support atomic batch writes (e.g., `POST /tasks/sync`), reducing a sync session to a single API call if supported by the backend.
 
-- **Ionic Components**: Strictly utilizes built-in Ionic components (`ion-list`, `ion-item`, `ion-fab`, `ion-action-sheet`, `ion-alert`) for a native-mobile experience.
-- **Interceptors**: 
-  - `AuthInterceptor`: Attaches a Bearer token to all outgoing API requests.
-  - `NetworkInterceptor`: Proactively blocks requests when offline.
-  - `LoaderInterceptor`: Managed Global loading state via `LoadingController`.
-  - `CamelCaseInterceptor`: Transforms backend `snake_case` to frontend `camelCase`.
+---
 
-## GCP Stack (Why these services?)
+## 📈 Future Improvements & Scalability
 
-- **Firebase Functions (Cloud Functions)**: Chosen for its seamless integration with Firebase Auth and Firestore. It allows us to build a serverless REST API using Express.js without managing infrastructure.
-- **Cloud Firestore**: A flexible, scalable NoSQL cloud database. Its real-time capabilities and offline-first SDK features make it perfect for task-based apps, though we've implemented a custom offline sync layer for granular control.
-- **Firebase Auth (Mocked)**: Integrated into the middleware for security checks.
+### Improvements with More Time
+- **Conflict Resolution**: Implement "Last-Writer-Wins" or "Operational Transformation" for multi-user collaboration.
+- **Push Notifications**: Integrate Firebase Cloud Messaging (FCM) to alert employees of task assignments.
+- **Deep Testing**: Expand unit tests to cover complex edge cases in the queue squashing logic.
 
-## Offline Sync Approach
+### Scaling Strategy
+- **Cloud Run**: Migrate the API from Cloud Functions to Cloud Run to handle higher concurrency and reduce cold-start latency.
+- **Global Deployment**: Leverage Firestore's multi-region capabilities to ensure sub-second latency for field employees worldwide.
+- **Caching Layer**: Introduce Redis via Google Cloud Memorystore for high-frequency metadata access.
 
-- **Storage**: Offline changes (Status updates, Additions, Deletions) are stored in `@ionic/storage-angular` (IndexedDB).
-- **Queueing**: Every destructive action is wrapped in a `SyncAction` object and pushed to a persistent queue if the network is unavailable.
-- **Conflict Handling**: The `SyncService` processes the queue sequentially (FIFO) to ensure state transitions (e.g., Pending -> In Progress -> Done) happen in the correct order. 
-- **Auto-Sync**: Uses `@capacitor/network` to detect reconnection and automatically triggers a queue flush to the GCP API.
+---
 
-## What I Would Improve With More Time
-
-1. **Conflict Resolution**: Implement "Last Writer Wins" or "Server Timestamp Comparison" to handle multi-user edits on the same task.
-2. **Push Notifications**: Use Firebase Cloud Messaging (FCM) to notify field employees of new assigned tasks in real-time.
-3. **Automated Testing**: Expand the Jasmine suite to include E2E tests for the offline-online transition.
-
-## Scaling
-- **Cloud Run**: As the API grows, migrating from Cloud Functions to Cloud Run allows for better concurrency handling and custom containerization.
-- **Global Firestore Deployment**: Enables multi-region data access for lower latency globally.
+## 👤 Login Credentials (Mock)
+- **Email**: `sagar@gmail.com`
+- **Password**: `password@123`

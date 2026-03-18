@@ -13,10 +13,16 @@ export class NetworkService {
     this.initNetworkListener();
   }
 
+  /**
+   * Returns the current online status.
+   */
   get currentStatus(): boolean {
     return this.onlineStatus.value;
   }
 
+  /**
+   * Initializes the network listener and updates status accordingly.
+   */
   private async initNetworkListener() {
     const status = await Network.getStatus();
     this.onlineStatus.next(status.connected);

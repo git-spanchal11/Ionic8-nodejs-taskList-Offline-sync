@@ -10,6 +10,9 @@ export class LoaderInterceptor implements HttpInterceptor {
 
   constructor(private loadingCtrl: LoadingController) { }
 
+  /**
+   * Intercepts requests to track active request count and show/hide the loading spinner.
+   */
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     this.requestCount++;
 
@@ -27,9 +30,10 @@ export class LoaderInterceptor implements HttpInterceptor {
     );
   }
 
+  /**
+   * Displays the global loading indicator if one isn't already visible.
+   */
   private async showLoader() {
-    // await this.loading?.dismiss();
-    // this.loading = null;
     if (!this.loading && this.requestCount > 0) {
       this.loading = await this.loadingCtrl.create({
         message: 'Loading...',
@@ -39,6 +43,9 @@ export class LoaderInterceptor implements HttpInterceptor {
     }
   }
 
+  /**
+   * Dismisses the global loading indicator with a slight delay for smoother UI transitions.
+   */
   private async hideLoader() {
     setTimeout(async () => {
       if (this.loading) {

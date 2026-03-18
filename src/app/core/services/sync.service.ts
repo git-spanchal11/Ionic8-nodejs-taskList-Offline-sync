@@ -21,6 +21,9 @@ export class SyncService {
     private taskService: TaskService
   ) {}
 
+  /**
+   * Initializes the network listener to trigger sync when the device comes online.
+   */
   init() {
     this.networkService.isOnline$.subscribe(async (isOnline) => {
       if (isOnline) {
@@ -29,6 +32,9 @@ export class SyncService {
     });
   }
 
+  /**
+   * Processes the offline queue and synchronizes it with the backend.
+   */
   private async flushQueue() {
     let queue = await this.taskService.getSyncQueue();
     if (queue.length > 0) {
@@ -82,6 +88,9 @@ export class SyncService {
     }
   }
 
+  /**
+   * Merges redundant offline actions for the same task into a single operation.
+   */
   private squashQueue(queue: any[]): any[] {
     const squashedMap = new Map<string, any>();
 

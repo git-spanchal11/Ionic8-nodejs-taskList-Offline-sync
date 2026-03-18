@@ -34,6 +34,9 @@ export class TaskListPage implements OnInit {
     setInterval(() => this.checkSyncQueue(), 2000);
   }
 
+  /**
+   * Loads the initial list of tasks from the service.
+   */
   loadTasks() {
     this.taskService.getTasks().subscribe({
       next: (tasks) => this.tasks = tasks,
@@ -41,6 +44,9 @@ export class TaskListPage implements OnInit {
     });
   }
 
+  /**
+   * Checks the offline queue to update internal state for UI sync indicators.
+   */
   async checkSyncQueue() {
     const queue = await this.taskService.getSyncQueue();
     this.syncQueueIds = new Set(queue.map(q => q.taskId));
@@ -51,6 +57,9 @@ export class TaskListPage implements OnInit {
     }
   }
 
+  /**
+   * Opens the management action sheet for a specific task.
+   */
   async onTaskStatusClick(task: Task) {
     const actionSheet = await this.actionSheetCtrl.create({
       header: 'Manage Task',
@@ -65,6 +74,9 @@ export class TaskListPage implements OnInit {
     await actionSheet.present();
   }
 
+  /**
+   * Updates the status of a task and notifies the service.
+   */
   async updateStatus(task: Task, newStatus: 'Pending' | 'In Progress' | 'Done') {
     if (task.status === newStatus) return;
 
@@ -77,6 +89,9 @@ export class TaskListPage implements OnInit {
     this.checkSyncQueue();
   }
 
+  /**
+   * Displays the alert prompt for adding a new task.
+   */
   async promptAddTask() {
     const alert = await this.alertCtrl.create({
       header: 'New Task',
@@ -98,12 +113,18 @@ export class TaskListPage implements OnInit {
     await alert.present();
   }
 
+  /**
+   * Adds a new task to the collection and stays in sync with the backend.
+   */
   async addTask(title: string) {
     const newTask = await this.taskService.addTask(title);
     this.tasks.push(newTask);
     this.checkSyncQueue();
   }
 
+  /**
+   * Removes a task and updates the backend.
+   */
   async deleteTask(taskId: string) {
     this.tasks = this.tasks.filter(t => t.taskId !== taskId);
     await this.taskService.deleteTask(taskId);

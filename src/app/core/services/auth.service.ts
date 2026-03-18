@@ -1,6 +1,9 @@
 import { Injectable } from '@angular/core';
 import { BehaviorSubject, Observable } from 'rxjs';
 
+/**
+ * AuthService handles mock authentication logic.
+ */
 @Injectable({
   providedIn: 'root'
 })
@@ -11,6 +14,9 @@ export class AuthService {
 
   isAuthenticated$ = this.isAuthenticatedSubject.asObservable();
 
+  /**
+   * Handles user login with static credentials and simulates a network delay.
+   */
   login(email: string, password: string): Observable<boolean> {
     return new Observable(observer => {
       setTimeout(() => {
@@ -25,10 +31,16 @@ export class AuthService {
     });
   }
 
+  /**
+   * Clears the current authentication state.
+   */
   logout() {
     this.isAuthenticatedSubject.next(false);
   }
 
+  /**
+   * Returns the current authentication status.
+   */
   get isAuthenticated() {
     return this.isAuthenticatedSubject.value;
   }

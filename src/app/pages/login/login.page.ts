@@ -17,6 +17,9 @@ export class LoginPage {
   
   errorMsg = '';
 
+  /**
+   * Processes the login submission and navigates to the task list upon success.
+   */
   onLogin(credentials: {email: string, password: string}) {
     this.errorMsg = '';
     this.authService.login(credentials.email, credentials.password).subscribe({

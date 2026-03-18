@@ -14,10 +14,16 @@ export class TaskItemComponent {
   @Input() isSyncing = false;
   @Output() statusClick = new EventEmitter<Task>();
 
+  /**
+   * Notifies the parent of a status interaction.
+   */
   onStatusClick() {
     this.statusClick.emit(this.task);
   }
 
+  /**
+   * Maps a task status to a color for UI rendering.
+   */
   getStatusColor(status: string): string {
     switch(status) {
       case 'Done': return 'success';

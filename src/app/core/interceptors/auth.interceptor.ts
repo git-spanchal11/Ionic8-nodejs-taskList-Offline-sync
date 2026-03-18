@@ -4,6 +4,9 @@ import { Observable } from 'rxjs';
 
 @Injectable()
 export class AuthInterceptor implements HttpInterceptor {
+  /**
+   * Intercepts outgoing requests to add a mock Authorization Bearer token.
+   */
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     // We attach the mock token to every outgoing request explicitly to test the GCP function's auth layer
     const mockToken = 'mock-jwt-token-for-sagar';

@@ -7,6 +7,9 @@ import { NetworkService } from '../services/network.service';
 export class NetworkInterceptor implements HttpInterceptor {
   constructor(private networkService: NetworkService) {}
 
+  /**
+   * Blocks outgoing HTTP requests immediately if the network status is offline.
+   */
   intercept(request: HttpRequest<any>, next: HttpHandler): Observable<HttpEvent<any>> {
     if (!this.networkService.currentStatus) {
       console.warn('NetworkInterceptor: Request blocked because offline.', request.url);

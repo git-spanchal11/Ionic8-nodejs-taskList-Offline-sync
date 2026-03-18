@@ -30,6 +30,9 @@ export class TaskService {
     private storageService: StorageService
   ) { }
 
+  /**
+   * Fetches the list of tasks from the backend and updates the cache.
+   */
   getTasks(): Observable<Task[]> {
     if (this.networkService.currentStatus) {
       return this.http.get<Task[]>(`${environment.apiUrl}/tasks`).pipe(
@@ -44,11 +47,17 @@ export class TaskService {
     }
   }
 
+  /**
+   * Retrieves tasks from the local storage cache.
+   */
   async getCachedTasks(): Promise<Task[]> {
     const tasks = await this.storageService.get(this.TASKS_KEY);
     return tasks || [];
   }
 
+  /**
+   * Updates a task's status locally and synchronizes with the backend.
+   */
   async updateTaskStatus(taskId: string, newStatus: 'Pending' | 'In Progress' | 'Done'): Promise<void> {
     const tasks = await this.getCachedTasks();
     const updatedTasks = tasks.map(t => t.taskId === taskId ? { ...t, status: newStatus } : t);
@@ -67,6 +76,9 @@ export class TaskService {
     }
   }
 
+  /**
+   * Adds a new task locally and synchronizes it with the backend.
+   */
   async addTask(title: string): Promise<Task> {
     const tempTaskId = 'T_' + new Date().getTime().toString();
     const newTask: Task = {
@@ -93,6 +105,9 @@ export class TaskService {
     return newTask;
   }
 
+  /**
+   * Deletes a task locally and synchronizes the removal with the backend.
+   */
   async deleteTask(taskId: string): Promise<void> {
     const tasks = await this.getCachedTasks();
     const updatedTasks = tasks.filter(t => t.taskId !== taskId);
@@ -111,6 +126,9 @@ export class TaskService {
     }
   }
 
+  /**
+   * Persists a synchronization action to the offline queue.
+   */
   private async queueSyncAction(action: SyncAction) {
     const queue = await this.getSyncQueue();
     queue.push(action);
@@ -118,15 +136,24 @@ export class TaskService {
     console.log(`Offline: Queued ${action.action} for task ${action.taskId}`);
   }
 
+  /**
+   * Retrieves all pending sync actions from local storage.
+   */
   async getSyncQueue(): Promise<SyncAction[]> {
     const queue = await this.storageService.get(this.SYNC_QUEUE_KEY);
     return queue || [];
   }
 
+  /**
+   * Clears the persistent sync queue from storage.
+   */
   async clearSyncQueue(): Promise<void> {
     await this.storageService.remove(this.SYNC_QUEUE_KEY);
   }
 
+  /**
+   * Executes a single synchronization operation against the backend API.
+   */
   async executeSyncAction(action: SyncAction): Promise<void> {
     try {
       if (action.action === 'ADD' && action.payload) {
@@ -152,6 +179,9 @@ export class TaskService {
    * Ideally, this calls a SINGLE endpoint like POST /tasks/sync
    * For the current setup, we will implement the logic that SHOULD be a single call,
    * but provide a fallback if the backend hasn't implemented it yet.
+   */
+  /**
+   * Orchestrates the batch synchronization of multiple offline actions.
    */
   async batchSync(tasks: SyncAction[], onProgress: (percentage: number) => void): Promise<void> {
     // If we assume a batch endpoint exists (Backend change required):

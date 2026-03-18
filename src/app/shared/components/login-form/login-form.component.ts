@@ -14,6 +14,9 @@ export class LoginFormComponent {
   
   credentials = { email: '', password: '' };
 
+  /**
+   * Emits the login credentials to the parent component.
+   */
   onSubmit() {
     this.loginSubmit.emit(this.credentials);
   }
