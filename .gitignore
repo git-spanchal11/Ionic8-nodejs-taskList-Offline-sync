@@ -68,3 +68,8 @@ testem.log
 # System files
 .DS_Store
 Thumbs.db
+
+
+# NODE-Express
+/NODE-Express/node_modules
+/NODE-Express/dist
