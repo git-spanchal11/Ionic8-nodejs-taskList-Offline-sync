@@ -183,22 +183,47 @@ export class TaskService {
   /**
    * Orchestrates the batch synchronization of multiple offline actions.
    */
-  async batchSync(tasks: SyncAction[], onProgress: (percentage: number) => void): Promise<void> {
-    // If we assume a batch endpoint exists (Backend change required):
+  async batchSync(actions: SyncAction[], onProgress: (percentage: number) => void): Promise<void> {
+    // Transform SyncAction[] to the format the backend expects:
+    // { tasks: Array<Partial<Task>>, deletedTaskIds: string[] }
+    // Also align camelCase (taskId, createdAt) to snake_case (task_id, created_at)
+    const tasksToSync: any[] = [];
+    const deletedTaskIds: string[] = [];
+
+    for (const action of actions) {
+      if (action.action === 'DELETE') {
+        deletedTaskIds.push(action.taskId);
+      } else {
+        const payload = action.payload || {};
+        const syncItem: any = {
+          task_id: action.taskId,
+          title: payload.title,
+          status: payload.status,
+          created_at: payload.createdAt || payload.created_at
+        };
+        // Remove undefined fields to keep the update partial if needed
+        Object.keys(syncItem).forEach(key => syncItem[key] === undefined && delete syncItem[key]);
+        tasksToSync.push(syncItem);
+      }
+    }
+
     try {
-      await firstValueFrom(this.http.post(`${environment.apiUrl}/tasks/sync`, { tasks }));
+      await firstValueFrom(this.http.post(`${environment.apiUrl}/tasks/sync`, { 
+        tasks: tasksToSync, 
+        deletedTaskIds: deletedTaskIds 
+      }));
       onProgress(100);
       return;
     } catch (err) {
-      console.warn('Batch endpoint not found, falling back to sequential...');
+      console.warn('Batch endpoint failed, falling back to sequential...', err);
     }
 
     // Fallback: Optimized sequential calls to stay compatible with current backend 
     let count = 0;
-    for (const action of tasks) {
+    for (const action of actions) {
       await this.executeSyncAction(action);
       count++;
-      onProgress(Math.round((count / tasks.length) * 100));
+      onProgress(Math.round((count / actions.length) * 100));
       // Artificial delay for UI visibility
       await new Promise(resolve => setTimeout(resolve, 200));
     }

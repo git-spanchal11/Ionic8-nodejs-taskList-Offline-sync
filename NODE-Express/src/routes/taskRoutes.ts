@@ -10,16 +10,16 @@ import {
 const router = Router();
 
 // Mock auth required for task routes (matches existing snippet behavior)
-const authenticate = (req: Request, res: Response, next: NextFunction) => {
-    const authHeader = req.headers.authorization;
+const authenticate = (_req: Request, _res: Response, next: NextFunction) => {
+    const authHeader = _req.headers.authorization;
     if (!authHeader || !authHeader.startsWith("Bearer ")) {
-        res.status(401).json({ error: "Unauthorized: Missing or invalid token" });
+        _res.status(401).json({ error: "Unauthorized: Missing or invalid token" });
         return;
     }
 
     const token = authHeader.split("Bearer ")[1];
     if (token !== "mock-jwt-token-for-sagar") {
-        res.status(401).json({ error: "Unauthorized: Invalid token" });
+        _res.status(401).json({ error: "Unauthorized: Invalid token" });
         return;
     }
 

@@ -7,21 +7,21 @@ const DB_PATH = path.resolve("data/tasks.json");
 
 const VALID_STATUSES: Task["status"][] = ["Pending", "In Progress", "Done"];
 
-export async function getAllTasks(_req: Request, res: Response): Promise<void> {
+export async function getAllTasks(_req: Request, _res: Response): Promise<void> {
     const tasks = await readDb<Task>(DB_PATH);
-    res.json(tasks);
+    _res.json(tasks);
 }
 
-export async function createTask(req: Request, res: Response): Promise<void> {
-    const { title, status, taskId } = req.body as CreateTaskInput;
+export async function createTask(_req: Request, _res: Response): Promise<void> {
+    const { title, status, taskId } = _req.body as CreateTaskInput;
 
     if (!title) {
-        res.status(400).json({ message: "Bad Request: Missing title" });
+        _res.status(400).json({ message: "Bad Request: Missing title" });
         return;
     }
 
     if (status && !VALID_STATUSES.includes(status)) {
-        res.status(400).json({ message: "Bad Request: Invalid status" });
+        _res.status(400).json({ message: "Bad Request: Invalid status" });
         return;
     }
 
@@ -29,7 +29,7 @@ export async function createTask(req: Request, res: Response): Promise<void> {
 
     const newTask: Task = {
         task_id: taskId ?? `T_${new Date().getTime()}`,
-        title,
+        title: title,
         status: status ?? "Pending",
         created_at: new Date().toISOString(),
     };
@@ -37,15 +37,15 @@ export async function createTask(req: Request, res: Response): Promise<void> {
     tasks.push(newTask);
     await writeDb(DB_PATH, tasks);
 
-    res.status(201).json(newTask);
+    _res.status(200).json(newTask);
 }
 
-export async function updateTaskStatus(req: Request, res: Response): Promise<void> {
-    const taskId = req.params.id;
-    const { status } = req.body as UpdateTaskStatusInput;
+export async function updateTaskStatus(_req: Request, _res: Response): Promise<void> {
+    const taskId = _req.params.id;
+    const { status } = _req.body as UpdateTaskStatusInput;
 
     if (!status || !VALID_STATUSES.includes(status)) {
-        res.status(400).json({ message: "Bad Request: Invalid status" });
+        _res.status(400).json({ message: "Bad Request: Invalid status" });
         return;
     }
 
@@ -53,47 +53,47 @@ export async function updateTaskStatus(req: Request, res: Response): Promise<voi
     const index = tasks.findIndex((t) => t.task_id === taskId);
 
     if (index === -1) {
-        res.status(404).json({ message: "Not Found: Task does not exist" });
+        _res.status(404).json({ message: "Not Found: Task does not exist" });
         return;
     }
 
     const existingTask = tasks[index];
     if (!existingTask) {
-        res.status(404).json({ message: "Not Found: Task does not exist" });
+        _res.status(404).json({ message: "Not Found: Task does not exist" });
         return;
     }
 
     tasks[index] = { ...existingTask, status };
     await writeDb(DB_PATH, tasks);
 
-    res.status(200).json({ message: "Task status updated successfully", task_id: taskId, status });
+    _res.status(200).json({ message: "Task status updated successfully", task_id: taskId, status });
 }
 
-export async function deleteTask(req: Request, res: Response): Promise<void> {
-    const taskId = req.params.id;
+export async function deleteTask(_req: Request, _res: Response): Promise<void> {
+    const taskId = _req.params.id;
     const tasks = await readDb<Task>(DB_PATH);
     const index = tasks.findIndex((t) => t.task_id === taskId);
 
     if (index === -1) {
-        res.status(404).json({ message: "Not Found: Task does not exist" });
+        _res.status(404).json({ message: "Not Found: Task does not exist" });
         return;
     }
 
     tasks.splice(index, 1);
     await writeDb(DB_PATH, tasks);
 
-    res.status(200).json({ message: "Task deleted successfully", task_id: taskId });
+    _res.status(200).json({ message: "Task deleted successfully", task_id: taskId });
 }
 
-export async function syncTasks(req: Request, res: Response): Promise<void> {
-    const { tasks: incoming, deletedTaskIds, deletedIds } = req.body as {
+export async function syncTasks(_req: Request, _res: Response): Promise<void> {
+    const { tasks: incoming, deletedTaskIds, deletedIds } = _req.body as {
         tasks: Array<Partial<Task> & { task_id?: string }>;
         deletedTaskIds?: string[] | string;
         deletedIds?: string[] | string;
     };
 
     if (!Array.isArray(incoming)) {
-        res.status(400).json({ message: "Bad Request: Missing tasks array" });
+        _res.status(400).json({ message: "Bad Request: Missing tasks array" });
         return;
     }
 
@@ -102,12 +102,12 @@ export async function syncTasks(req: Request, res: Response): Promise<void> {
     const normalizedDeletedIds: string[] = typeof rawDeleted === "string" ? [rawDeleted] : Array.isArray(rawDeleted) ? rawDeleted : [];
 
     if (rawDeleted && !Array.isArray(rawDeleted) && typeof rawDeleted !== "string") {
-        res.status(400).json({ message: "Bad Request: deletedTaskIds must be a string or string array" });
+        _res.status(400).json({ message: "Bad Request: deletedTaskIds must be a string or string array" });
         return;
     }
 
     if (normalizedDeletedIds.some((id) => typeof id !== "string")) {
-        res.status(400).json({ message: "Bad Request: deletedTaskIds must only contain strings" });
+        _res.status(400).json({ message: "Bad Request: deletedTaskIds must only contain strings" });
         return;
     }
 
@@ -126,12 +126,12 @@ export async function syncTasks(req: Request, res: Response): Promise<void> {
         if (existingIndex === -1) {
             // New task from client
             if (!incomingTitle) {
-                res.status(400).json({ message: "Bad Request: Missing title for new task" });
+                _res.status(400).json({ message: "Bad Request: Missing title for new task" });
                 return;
             }
 
             if (incomingStatus && !VALID_STATUSES.includes(incomingStatus)) {
-                res.status(400).json({ message: "Bad Request: Invalid task status" });
+                _res.status(400).json({ message: "Bad Request: Invalid task status" });
                 return;
             }
 
@@ -157,7 +157,7 @@ export async function syncTasks(req: Request, res: Response): Promise<void> {
                 : existingTask.status;
 
             if (incomingStatus !== undefined && updatedStatus === undefined) {
-                res.status(400).json({ message: "Bad Request: Invalid task status" });
+                _res.status(400).json({ message: "Bad Request: Invalid task status" });
                 return;
             }
 
@@ -177,5 +177,5 @@ export async function syncTasks(req: Request, res: Response): Promise<void> {
 
     await writeDb(DB_PATH, finalTasks);
 
-    res.status(200).json({ message: "Sync completed", tasks: finalTasks });
+    _res.status(200).json({ message: "Sync completed", tasks: finalTasks });
 }
