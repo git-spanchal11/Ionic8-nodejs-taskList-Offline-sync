@@ -1,0 +1,38 @@
+[
+  {
+    "id": "1",
+    "name": "Alice Johnson",
+    "email": "alice@example.com",
+    "age": 28
+  },
+  {
+    "id": "2",
+    "name": "Bob Smith",
+    "email": "bob@example.com",
+    "age": 34
+  },
+  {
+    "id": "3",
+    "name": "Charlie Brown",
+    "email": "charlie@example.com",
+    "age": 22
+  },
+  {
+    "id": "d44efe21-22f9-4c8e-b29c-83210b9a5966",
+    "name": "Sagar Panchal",
+    "email": "panchalsagar@gmail.com",
+    "age": 30
+  },
+  {
+    "id": "bf0c476a-206c-4796-b9c8-af196e1b8dc6",
+    "name": "Ravi Panchal",
+    "email": "ravi@gmail.com",
+    "age": 33
+  },
+  {
+    "id": "141451e5-b859-4e7d-bb71-dae9ed9ddfc9",
+    "name": "ravi Panchal",
+    "email": "ravi21@gmail.com",
+    "age": 33
+  }
+]
